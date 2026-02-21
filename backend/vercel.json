@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run vercel-build",
+  "functions": {
+    "api/[...all].js": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}

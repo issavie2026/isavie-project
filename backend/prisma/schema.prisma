@@ -1,0 +1,225 @@
+// ISSAVIE MVP - Prisma schema
+// Dev: SQLite, Prod: PostgreSQL (switch datasource url)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tripMemberships TripMember[]
+  createdTrips    Trip[]           @relation("TripCreator")
+  itineraryItems  ItineraryItem[]  @relation("ItemCreator")
+  updatedItems    ItineraryItem[]  @relation("ItemUpdater")
+  announcements   Announcement[]
+  comments        Comment[]
+  changeRequests  ChangeRequest[]  @relation("ChangeRequestRequester")
+  changeDecisions ChangeRequest[]  @relation("ChangeRequestDecider")
+  notifications   Notification[]
+  invites         Invite[]
+}
+
+model MagicLink {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+}
+
+model Trip {
+  id          String   @id @default(uuid())
+  name        String
+  destination String
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+  timezone    String   @default("UTC")
+  createdBy   String   @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  creator    User          @relation("TripCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  members    TripMember[]
+  days       ItineraryDay[]
+  items      ItineraryItem[]
+  announcements Announcement[]
+  comments   Comment[]
+  changeRequests ChangeRequest[]
+  notifications Notification[]
+  invites       Invite[]
+  essentials    TripEssentials?
+}
+
+model Invite {
+  id        String    @id @default(uuid())
+  tripId    String    @map("trip_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdBy String    @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([tripId, tokenHash])
+  @@map("invites")
+}
+
+model TripMember {
+  tripId   String   @map("trip_id")
+  userId   String   @map("user_id")
+  role     String   // organizer | co_organizer | member
+  status   String   @default("active") // active | removed
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([tripId, userId])
+  @@index([tripId, role])
+  @@map("trip_members")
+}
+
+model ItineraryDay {
+  id       String   @id @default(uuid())
+  tripId   String   @map("trip_id")
+  date     DateTime // calendar date for this day
+  position Int      @default(0)
+
+  trip  Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  items ItineraryItem[]
+
+  @@unique([tripId, date])
+  @@map("itinerary_days")
+}
+
+model ItineraryItem {
+  id           String   @id @default(uuid())
+  tripId       String   @map("trip_id")
+  dayId        String   @map("day_id")
+  title        String
+  startTime    String?  @map("start_time")  // "TBD" or ISO time
+  endTime      String?  @map("end_time")
+  locationText String?  @map("location_text")
+  notes        String?
+  externalLinks String  @default("[]") @map("external_links") // JSON array
+  createdBy    String   @map("created_by")
+  updatedBy    String?  @map("updated_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  trip     Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  day      ItineraryDay  @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  creator  User          @relation("ItemCreator", fields: [createdBy], references: [id])
+  updater  User?         @relation("ItemUpdater", fields: [updatedBy], references: [id])
+  changeRequests ChangeRequest[]
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  tripId    String   @map("trip_id")
+  title     String?
+  body      String
+  pinned    Boolean  @default(false)
+  createdBy String   @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  creator  User      @relation(fields: [createdBy], references: [id])
+}
+
+model Comment {
+  id         String    @id @default(uuid())
+  tripId     String    @map("trip_id")
+  entityType String    @map("entity_type") // itinerary_item | announcement
+  entityId   String    @map("entity_id")
+  userId     String    @map("user_id")
+  body       String
+  createdAt  DateTime  @default(now()) @map("created_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, entityType, entityId])
+  @@map("comments")
+}
+
+model ChangeRequest {
+  id              String   @id @default(uuid())
+  tripId          String   @map("trip_id")
+  itineraryItemId String   @map("itinerary_item_id")
+  requestedBy     String   @map("requested_by")
+  proposedPatch   String   @map("proposed_patch") // JSON diff
+  status          String   @default("pending") // pending | approved | denied
+  decidedBy       String?  @map("decided_by")
+  decidedAt       DateTime? @map("decided_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  trip    Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  item    ItineraryItem @relation(fields: [itineraryItemId], references: [id], onDelete: Cascade)
+  requester User        @relation("ChangeRequestRequester", fields: [requestedBy], references: [id])
+  decider   User?       @relation("ChangeRequestDecider", fields: [decidedBy], references: [id])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tripId    String    @map("trip_id")
+  type      String    // e.g. announcement_posted, itinerary_updated, change_request_submitted, etc.
+  payload   String    @default("{}") // JSON
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model TripEssentials {
+  id                String   @id @default(uuid())
+  tripId            String   @unique @map("trip_id")
+  meetingPoints     String   @default("[]") @map("meeting_points")
+  houseRules        String?  @map("house_rules")
+  emergencyContacts String   @default("[]") @map("emergency_contacts")
+  lodgingDetails    String?  @map("lodging_details")
+  keyLinks          String   @default("[]") @map("key_links")
+  packingList       String   @default("[]") @map("packing_list")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("trip_essentials")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  tripId       String?  @map("trip_id")
+  actorUserId  String   @map("actor_user_id")
+  action       String
+  entityType   String?  @map("entity_type")
+  entityId     String?  @map("entity_id")
+  metadata     String?  @default("{}") // JSON
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  event     String
+  payload   String   @default("{}")
+  userId    String?  @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+}
