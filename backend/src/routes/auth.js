@@ -9,6 +9,17 @@ import { handleValidationErrors } from '../middleware/validate.js';
 
 export const authRouter = Router();
 
+function getMagicLinkBaseUrl() {
+  const raw = process.env.FRONTEND_URL || 'http://localhost:5173';
+  // FRONTEND_URL may be a comma-separated allowlist for CORS.
+  // Use the first URL as the canonical magic-link destination.
+  const first = raw
+    .split(',')
+    .map((value) => value.trim())
+    .find(Boolean);
+  return first || 'http://localhost:5173';
+}
+
 const magicLinkValidators = [
   body('email').trim().notEmpty().withMessage('Email required').bail().isEmail().withMessage('Valid email required').bail().isLength({ max: 255 }),
 ];
@@ -24,7 +35,7 @@ authRouter.post('/magic-link', magicLinkValidators, handleValidationErrors, asyn
     await prisma.magicLink.create({
       data: { email, token, expiresAt },
     });
-    const frontend = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontend = getMagicLinkBaseUrl();
     const link = `${frontend}/auth/verify?token=${token}`;
     await sendMagicLink(email, link);
     res.json({ ok: true, message: 'Magic link sent' });

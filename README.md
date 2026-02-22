@@ -56,7 +56,7 @@ npm run dev
 | `FRONTEND_URL` | e.g. `http://localhost:5173` (magic link base) |
 | `SMTP_URL` | Optional SMTP transport URL |
 | `RESEND_API_KEY` | Optional; Resend API key (preferred over SMTP) |
-| `SMTP_FROM` | Sender email, e.g. `ISSAVIE <onboarding@resend.dev>` |
+| `SMTP_FROM` | Sender email, e.g. `Issavie <no-reply@issavie.com>` |
 
 ## Deploying to Vercel
 

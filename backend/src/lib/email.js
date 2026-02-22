@@ -32,7 +32,7 @@ function getTransporter() {
 async function sendWithResend(to, subject, text, html) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return false;
-  const from = process.env.SMTP_FROM || 'ISSAVIE <onboarding@resend.dev>';
+  const from = process.env.SMTP_FROM || 'Issavie <no-reply@issavie.com>';
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -68,7 +68,7 @@ export async function sendMagicLink(to, link) {
 
   const transport = getTransporter();
   await transport.sendMail({
-    from: process.env.SMTP_FROM || 'ISSAVIE <noreply@issavie.dev>',
+    from: process.env.SMTP_FROM || 'Issavie <no-reply@issavie.com>',
     to,
     subject,
     text,
