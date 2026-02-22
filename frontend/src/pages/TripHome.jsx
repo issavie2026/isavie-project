@@ -6,6 +6,7 @@ import TripItinerary from '../components/TripItinerary';
 import TripAnnouncements from '../components/TripAnnouncements';
 import TripMembers from '../components/TripMembers';
 import TripEssentials from '../components/TripEssentials';
+import { formatDateOnly } from '../utils/date';
 
 const TABS = ['itinerary', 'essentials', 'announcements', 'members'];
 
@@ -56,7 +57,7 @@ export default function TripHome() {
             <p className="eyebrow">Trip created</p>
             <h1>{trip.name}</h1>
             <p className="muted">
-              {trip.destination} - {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+              {trip.destination} - {formatDateOnly(trip.startDate)} - {formatDateOnly(trip.endDate)}
             </p>
             <div className="hero-actions">
               <button
@@ -82,7 +83,7 @@ export default function TripHome() {
           <Link to="/trips" style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>&larr; Trips</Link>
           <h1 style={{ margin: '0.25rem 0' }}>{trip.name}</h1>
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>
-            {trip.destination} - {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+            {trip.destination} - {formatDateOnly(trip.startDate)} - {formatDateOnly(trip.endDate)}
           </p>
         </div>
       </div>

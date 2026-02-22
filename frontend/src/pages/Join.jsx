@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { invites as invitesApi } from '../api';
 import { useAuth } from '../AuthContext';
 import { analytics } from '../api';
+import { formatDateOnly } from '../utils/date';
 
 export default function Join() {
   const { token } = useParams();
@@ -63,7 +64,7 @@ export default function Join() {
 
   const trip = preview?.trip;
   const dateStr = trip?.startDate && trip?.endDate
-    ? `${new Date(trip.startDate).toLocaleDateString()} - ${new Date(trip.endDate).toLocaleDateString()}`
+    ? `${formatDateOnly(trip.startDate)} - ${formatDateOnly(trip.endDate)}`
     : '';
 
   return (

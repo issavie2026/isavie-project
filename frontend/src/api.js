@@ -29,6 +29,7 @@ export const invites = {
 };
 
 export const trips = {
+  list: () => request('/trips'),
   create: (body) => request('/trips', { method: 'POST', body: JSON.stringify(body) }),
   get: (id) => request(`/trips/${id}`),
   delete: (id) => request(`/trips/${id}`, { method: 'DELETE' }),

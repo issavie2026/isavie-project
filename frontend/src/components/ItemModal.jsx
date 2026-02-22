@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { itinerary as itineraryApi } from '../api';
 import { analytics } from '../api';
+import { formatDateOnly } from '../utils/date';
 
 export default function ItemModal({ tripId, days, item, onClose, onSaved }) {
   const [title, setTitle] = useState('');
@@ -96,7 +97,7 @@ export default function ItemModal({ tripId, days, item, onClose, onSaved }) {
               <label>Day</label>
               <select value={day_id} onChange={(e) => setDayId(e.target.value)}>
                 {days.map((d) => (
-                  <option key={d.id} value={d.id}>{new Date(d.date).toLocaleDateString()}</option>
+                  <option key={d.id} value={d.id}>{formatDateOnly(d.date)}</option>
                 ))}
               </select>
             </div>

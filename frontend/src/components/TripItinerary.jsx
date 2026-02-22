@@ -3,6 +3,7 @@ import { itinerary as itineraryApi, changeRequests as crApi, exportPdf, analytic
 import ItemModal from './ItemModal';
 import ItemDetail from './ItemDetail';
 import ChangeRequestsInbox from './ChangeRequestsInbox';
+import { formatDateOnly } from '../utils/date';
 
 export default function TripItinerary({ tripId, trip, canEdit, myRole }) {
   const [data, setData] = useState({ days: [] });
@@ -79,7 +80,7 @@ export default function TripItinerary({ tripId, trip, canEdit, myRole }) {
           ) : (
             data.days.map((day) => (
               <div key={day.id} className="card">
-                <h3 style={{ marginTop: 0 }}>{new Date(day.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</h3>
+                <h3 style={{ marginTop: 0 }}>{formatDateOnly(day.date, undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</h3>
                 {(day.items || []).length === 0 ? (
                   <p style={{ color: 'var(--text-muted)' }}>No items</p>
                 ) : (

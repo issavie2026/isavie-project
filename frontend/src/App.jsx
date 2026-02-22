@@ -7,6 +7,8 @@ import Verify from './pages/Verify';
 import Join from './pages/Join';
 import TripHome from './pages/TripHome';
 import CreateTrip from './pages/CreateTrip';
+import { trips as tripsApi } from './api';
+import { formatDateOnly } from './utils/date';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -46,13 +48,7 @@ function TripsList() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch('/api/trips', {
-      headers: { Authorization: 'Bearer ' + localStorage.getItem('token') },
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error('Could not load trips');
-        return r.json();
-      })
+    tripsApi.list()
       .then(setTrips)
       .catch((err) => setError(err.message || 'Something went wrong'))
       .finally(() => setLoading(false));
@@ -88,7 +84,7 @@ function TripsList() {
                 <h3>{t.name}</h3>
                 <p className="trip-meta">{t.destination}</p>
                 <p className="trip-meta">
-                  {new Date(t.startDate).toLocaleDateString()} - {new Date(t.endDate).toLocaleDateString()}
+                  {formatDateOnly(t.startDate)} - {formatDateOnly(t.endDate)}
                 </p>
               </div>
             </Link>
