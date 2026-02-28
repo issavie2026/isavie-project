@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { trips as tripsApi } from '../api';
 import TripItinerary from '../components/TripItinerary';
@@ -12,6 +12,7 @@ const TABS = ['itinerary', 'essentials', 'announcements', 'members'];
 
 export default function TripHome() {
   const { tripId } = useParams();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [trip, setTrip] = useState(null);
@@ -19,6 +20,7 @@ export default function TripHome() {
   const [tab, setTab] = useState('itinerary');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [showCreated, setShowCreated] = useState(searchParams.get('created') === '1');
   const tabsRef = useRef(null);
   const unlockAll = import.meta.env.VITE_UNLOCK_ALL === 'true';
@@ -40,12 +42,27 @@ export default function TripHome() {
 
   const myMember = members.find((m) => m.userId === user?.id || m.user?.id === user?.id);
   const myRole = myMember?.role ?? trip.myRole;
-  const canEdit = unlockAll || myRole === 'organizer' || myRole === 'co_organizer';
+  const canEdit = unlockAll || myRole === 'organizer';
+  const canDelete = unlockAll || myRole === 'organizer';
   const heroImage = `https://source.unsplash.com/1200x800/?${encodeURIComponent(trip.destination || 'travel')}`;
   const dismissCreated = () => {
     setShowCreated(false);
     searchParams.delete('created');
     setSearchParams(searchParams, { replace: true });
+  };
+  const handleDeleteTrip = async () => {
+    if (!canDelete || deleteLoading) return;
+    const confirmed = window.confirm(`Delete "${trip.name}"? This removes the trip and all of its planning data.`);
+    if (!confirmed) return;
+    setDeleteLoading(true);
+    setError('');
+    try {
+      await tripsApi.delete(tripId);
+      navigate('/trips', { replace: true });
+    } catch (err) {
+      setError(err.message || 'Failed to delete trip');
+      setDeleteLoading(false);
+    }
   };
 
   return (
@@ -53,7 +70,7 @@ export default function TripHome() {
       {showCreated && (
         <section className="trip-hero">
           <div className="trip-hero-media" style={{ backgroundImage: `url('${heroImage}')` }} />
-          <div className="trip-hero-card">
+          <div className="trip-hero-card card-primary">
             <p className="eyebrow">Trip created</p>
             <h1>{trip.name}</h1>
             <p className="muted">
@@ -86,7 +103,18 @@ export default function TripHome() {
             {trip.destination} - {formatDateOnly(trip.startDate)} - {formatDateOnly(trip.endDate)}
           </p>
         </div>
+        {canDelete && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={handleDeleteTrip}
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete trip'}
+          </button>
+        )}
       </div>
+      {error && <p style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</p>}
 
       <div ref={tabsRef} className="tabs" style={{ flexWrap: 'wrap', gap: '0.25rem' }}>
         {TABS.map((t) => (
@@ -99,7 +127,7 @@ export default function TripHome() {
       {tab === 'itinerary' && (
         <TripItinerary tripId={tripId} trip={trip} canEdit={canEdit} myRole={myRole} />
       )}
-      {tab === 'essentials' && <TripEssentials tripId={tripId} canEdit={canEdit} />}
+      {tab === 'essentials' && <TripEssentials tripId={tripId} canEdit={canEdit} trip={trip} />}
       {tab === 'announcements' && (
         <TripAnnouncements tripId={tripId} canEdit={canEdit} />
       )}

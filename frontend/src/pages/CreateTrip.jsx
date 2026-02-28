@@ -54,7 +54,7 @@ export default function CreateTrip() {
 
   return (
     <div className="container" style={{ maxWidth: 560 }}>
-      <section className="page-intro card">
+      <section className="page-intro card card-elevated">
         <div>
           <p className="eyebrow">Plan a new trip</p>
           <h1 className="page-title">Create trip</h1>

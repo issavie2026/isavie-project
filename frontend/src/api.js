@@ -80,10 +80,10 @@ export const comments = {
     if (entityId) q.set('entityId', entityId);
     return request(`/trips/${tripId}/comments?${q}`);
   },
-  create: (tripId, entity_type, entity_id, body) =>
+  create: (tripId, entity_type, entity_id, body, attachments = []) =>
     request(`/trips/${tripId}/comments`, {
       method: 'POST',
-      body: JSON.stringify({ entity_type, entity_id, body }),
+      body: JSON.stringify({ entity_type, entity_id, body, attachments }),
     }),
   delete: (tripId, commentId) =>
     request(`/trips/${tripId}/comments/${commentId}`, { method: 'DELETE' }),

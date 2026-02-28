@@ -14,8 +14,15 @@
   --danger: #c03221;
   --radius: 14px;
   --radius-lg: 18px;
+  /* Subtle elevation hierarchy (perceptible depth, not heavy 3D) */
+  --elevation-1: 0 2px 8px rgba(38, 44, 38, 0.06);
+  --elevation-2: 0 8px 24px rgba(38, 44, 38, 0.08), 0 2px 6px rgba(38, 44, 38, 0.04);
+  --elevation-3: 0 18px 45px rgba(38, 44, 38, 0.1), 0 6px 12px rgba(38, 44, 38, 0.05);
+  --elevation-hover: 0 20px 40px rgba(38, 44, 38, 0.12), 0 8px 16px rgba(38, 44, 38, 0.06);
   --shadow: 0 18px 45px rgba(38, 44, 38, 0.08);
   --font-body: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+  --motion-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --motion-duration: 0.25s;
   --font-display: 'Fraunces', 'Times New Roman', serif;
   --container-max: 1024px;
 }
@@ -82,8 +89,45 @@ input, textarea {
   border-radius: var(--radius-lg);
   padding: 1.35rem;
   margin-bottom: 1.1rem;
-  box-shadow: var(--shadow);
-  animation: fadeUp 0.35s ease both;
+  box-shadow: var(--elevation-2);
+  animation: fadeUp 0.35s var(--motion-ease) both;
+  transition: transform var(--motion-duration) var(--motion-ease),
+    box-shadow var(--motion-duration) var(--motion-ease);
+}
+
+/* Elevated cards for primary content and highlights */
+.card-elevated {
+  box-shadow: var(--elevation-3);
+}
+
+.card-elevated:hover {
+  box-shadow: var(--elevation-hover);
+  transform: translateY(-2px);
+}
+
+/* Primary action / hero-style cards (e.g. CTAs, trip hero overlay) */
+.card-primary {
+  box-shadow: var(--elevation-3), 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.card-primary:hover {
+  box-shadow: var(--elevation-hover), 0 0 0 1px rgba(255, 255, 255, 0.6);
+  transform: translateY(-3px) scale(1.01);
+}
+
+/* Interactive card lift (for clickable cards) */
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--elevation-hover);
+}
+
+.card-interactive:active {
+  transform: translateY(-2px) scale(0.99);
+  transition-duration: 0.1s;
 }
 
 .btn {
@@ -95,37 +139,63 @@ input, textarea {
   font-size: 0.95rem;
   font-weight: 500;
   border-radius: 999px;
-  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  transition: background var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease),
+    box-shadow var(--motion-duration) var(--motion-ease),
+    opacity var(--motion-duration) var(--motion-ease);
+}
+
+.btn:active {
+  transform: scale(0.98);
+  transition-duration: 0.1s;
 }
 
 .btn-primary {
   background: var(--accent);
   color: white;
-  box-shadow: 0 10px 24px rgba(47, 127, 115, 0.22);
+  box-shadow: var(--elevation-2), 0 4px 12px rgba(47, 127, 115, 0.2);
 }
 
 .btn-primary:hover {
   background: var(--accent-strong);
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--elevation-hover), 0 6px 16px rgba(47, 127, 115, 0.25);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .btn-secondary {
   background: var(--surface2);
   color: var(--text);
   border: 1px solid var(--border);
+  box-shadow: var(--elevation-1);
 }
 
 .btn-secondary:hover {
   background: #ece5dc;
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: var(--elevation-2);
+}
+
+.btn-secondary:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .btn-danger {
   background: var(--danger);
   color: white;
+  box-shadow: var(--elevation-1);
 }
 
 .btn-danger:hover {
-  opacity: 0.9;
+  opacity: 0.95;
+  transform: translateY(-1px) scale(1.02);
+}
+
+.btn-danger:active {
+  transform: scale(0.98);
 }
 
 .btn-ghost {
@@ -135,6 +205,7 @@ input, textarea {
 
 .btn-ghost:hover {
   background: rgba(47, 127, 115, 0.12);
+  transform: translateY(-1px);
 }
 
 .form-group {
@@ -182,16 +253,27 @@ input, textarea {
   color: var(--text-muted);
   font-size: 0.95rem;
   border-radius: 999px;
+  transition: color var(--motion-duration) var(--motion-ease),
+    background var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease),
+    box-shadow var(--motion-duration) var(--motion-ease);
 }
 
 .tabs button.active {
   color: var(--text);
   background: var(--surface);
-  box-shadow: 0 10px 20px rgba(30, 34, 31, 0.08);
+  box-shadow: var(--elevation-2);
 }
 
 .tabs button:hover:not(.active) {
   color: var(--text);
+}
+
+.tabs button:focus-visible,
+.btn:focus-visible,
+.card-interactive:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(47, 127, 115, 0.35);
 }
 
 .badge {
@@ -279,14 +361,15 @@ input, textarea {
   min-height: calc(100vh - 70px);
 }
 
+/* Layered hero: image + gradient + elevated card for destination appeal */
 .trip-hero {
   position: relative;
   border-radius: 24px;
   overflow: hidden;
   margin: 0.5rem 0 1.5rem;
   min-height: 240px;
-  box-shadow: var(--shadow);
-  animation: fadeUp 0.45s ease both;
+  box-shadow: var(--elevation-3);
+  animation: fadeUp 0.45s var(--motion-ease) both;
 }
 
 .trip-hero-media {
@@ -294,8 +377,13 @@ input, textarea {
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: saturate(1.05);
+  filter: saturate(1.08) contrast(1.02);
   pointer-events: none;
+  transition: transform 0.6s var(--motion-ease);
+}
+
+.trip-hero:hover .trip-hero-media {
+  transform: scale(1.03);
 }
 
 .trip-hero::after {
@@ -310,12 +398,15 @@ input, textarea {
   position: relative;
   z-index: 1;
   max-width: 520px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 18px;
   padding: 1.5rem;
   margin: 1.25rem;
-  box-shadow: 0 18px 45px rgba(16, 18, 16, 0.18);
+  box-shadow: var(--elevation-3), 0 0 0 1px rgba(255, 255, 255, 0.5);
+  transition: transform var(--motion-duration) var(--motion-ease),
+    box-shadow var(--motion-duration) var(--motion-ease);
 }
 
 .trip-hero-card h1 {
@@ -361,6 +452,7 @@ input, textarea {
   gap: 1rem;
 }
 
+/* Trip cards: layered image + elevated surface, interactive lift */
 .trip-card {
   display: block;
   color: inherit;
@@ -369,20 +461,32 @@ input, textarea {
   border: 1px solid var(--border);
   border-radius: 18px;
   overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--elevation-2);
+  transition: transform var(--motion-duration) var(--motion-ease),
+    box-shadow var(--motion-duration) var(--motion-ease);
+  animation: fadeUp 0.4s var(--motion-ease) both;
 }
 
 .trip-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 24px 40px rgba(20, 27, 23, 0.16);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--elevation-hover);
   text-decoration: none;
+}
+
+.trip-card:active {
+  transform: translateY(-2px) scale(0.99);
+  transition-duration: 0.1s;
 }
 
 .trip-card-image {
   height: 124px;
   background-size: cover;
   background-position: center;
+  transition: transform 0.5s var(--motion-ease);
+}
+
+.trip-card:hover .trip-card-image {
+  transform: scale(1.05);
 }
 
 .trip-card-body {
@@ -547,6 +651,22 @@ input, textarea {
     transform: translateY(0);
   }
 }
+
+/* Stagger children for motion that guides attention */
+.stagger-children > * {
+  animation: fadeUp 0.4s var(--motion-ease) both;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
 
 @media (max-width: 720px) {
   .topbar-inner {

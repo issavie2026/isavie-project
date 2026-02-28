@@ -7,10 +7,25 @@ export default function NotificationsPanel({ onClose }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    notifApi.list()
-      .then(setList)
-      .catch(() => setList([]))
-      .finally(() => setLoading(false));
+    let active = true;
+    const load = () => {
+      notifApi.list()
+        .then((items) => {
+          if (active) setList(items);
+        })
+        .catch(() => {
+          if (active) setList([]);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    };
+    load();
+    const timer = setInterval(load, 15000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
   }, []);
 
   const markRead = (id) => {
@@ -60,6 +75,11 @@ export default function NotificationsPanel({ onClose }) {
                 onClick={() => { markRead(n.id); onClose(); }}
               >
                 <div style={{ fontSize: '0.9rem' }}>{formatType(n.type)}</div>
+                {formatDetail(n) && (
+                  <div style={{ fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                    {formatDetail(n)}
+                  </div>
+                )}
                 {n.trip && <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{n.trip.name}</div>}
               </Link>
             </li>
@@ -68,6 +88,16 @@ export default function NotificationsPanel({ onClose }) {
       )}
     </div>
   );
+}
+
+function parsePayload(payload) {
+  if (!payload) return {};
+  if (typeof payload === 'object') return payload;
+  try {
+    return JSON.parse(payload);
+  } catch {
+    return {};
+  }
 }
 
 function formatType(type) {
@@ -81,4 +111,27 @@ function formatType(type) {
     essentials_updated: 'Essentials updated',
   };
   return t[type] || type;
+}
+
+function formatDetail(notification) {
+  const payload = parsePayload(notification.payload);
+  if (notification.type === 'itinerary_item_created') {
+    return payload.title ? `"${payload.title}" was added to the itinerary.` : 'A new itinerary item was added.';
+  }
+  if (notification.type === 'itinerary_item_updated') {
+    return payload.title ? `"${payload.title}" was updated.` : 'An itinerary item was updated.';
+  }
+  if (notification.type === 'announcement_posted') {
+    return payload.title ? `"${payload.title}" was posted.` : 'A new announcement is available.';
+  }
+  if (notification.type === 'change_request_submitted') {
+    return payload.title ? `Review the request for "${payload.title}".` : 'A trip change needs review.';
+  }
+  if (notification.type === 'change_request_approved') {
+    return payload.title ? `"${payload.title}" was approved.` : 'A change request was approved.';
+  }
+  if (notification.type === 'change_request_denied') {
+    return payload.title ? `"${payload.title}" was denied.` : 'A change request was denied.';
+  }
+  return '';
 }

@@ -33,7 +33,7 @@ export default function Login() {
   if (sent) {
     return (
       <div className="auth-shell">
-        <div className="auth-card card">
+        <div className="auth-card card card-elevated">
           <p className="eyebrow">Check your inbox</p>
           <h1 style={{ marginTop: 0 }}>Magic link sent</h1>
           <p>We sent a sign-in link to <strong>{email}</strong>.</p>
@@ -53,7 +53,7 @@ export default function Login() {
         <h1>Calm group travel planning.</h1>
         <p>One place for itinerary, updates, and decisions. No booking clutter.</p>
       </section>
-      <div className="auth-card card">
+      <div className="auth-card card card-elevated">
         <h2 style={{ marginTop: 0 }}>Sign in</h2>
         <p className="muted">Enter your email and we will send a magic link.</p>
         <form onSubmit={handleSubmit}>

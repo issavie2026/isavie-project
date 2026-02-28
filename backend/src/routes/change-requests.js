@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/db.js';
 import { requireAuth } from '../middleware/auth.js';
-import { requireMember, requireOrganizerOrCo } from '../middleware/rbac.js';
+import { requireMember, requireOrganizer } from '../middleware/rbac.js';
 import { badRequest, notFound } from '../middleware/error.js';
 import { notifyTripMembers, notifyUser } from '../lib/notifications.js';
 
@@ -32,7 +32,7 @@ router.get('/', requireAuth, requireMember, async (req, res, next) => {
 });
 
 function applyPatch(item, patch) {
-  const allowed = ['title', 'startTime', 'endTime', 'locationText', 'notes', 'externalLinks'];
+  const allowed = ['title', 'startTime', 'endTime', 'locationText', 'coverImage', 'notes', 'externalLinks'];
   const data = {};
   for (const k of allowed) {
     if (patch[k] !== undefined) {
@@ -43,7 +43,7 @@ function applyPatch(item, patch) {
   return data;
 }
 
-router.post('/:requestId/approve', requireAuth, requireMember, requireOrganizerOrCo, async (req, res, next) => {
+router.post('/:requestId/approve', requireAuth, requireMember, requireOrganizer, async (req, res, next) => {
   try {
     const tripId = getTripId(req);
     const { requestId } = req.params;
@@ -72,7 +72,7 @@ router.post('/:requestId/approve', requireAuth, requireMember, requireOrganizerO
   }
 });
 
-router.post('/:requestId/deny', requireAuth, requireMember, requireOrganizerOrCo, async (req, res, next) => {
+router.post('/:requestId/deny', requireAuth, requireMember, requireOrganizer, async (req, res, next) => {
   try {
     const tripId = getTripId(req);
     const { requestId } = req.params;

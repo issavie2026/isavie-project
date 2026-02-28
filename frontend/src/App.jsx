@@ -55,7 +55,7 @@ function TripsList() {
   }, []);
   return (
     <div className="container">
-      <section className="page-intro card">
+      <section className="page-intro card card-elevated">
         <div>
           <p className="eyebrow">Travel hub</p>
           <h1 className="page-title">My trips</h1>
@@ -68,7 +68,7 @@ function TripsList() {
       {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
 
       {!loading && !error && trips.length === 0 && (
-        <section className="card trip-empty">
+        <section className="card card-elevated trip-empty">
           <h3>No trips yet</h3>
           <p className="muted">Create your first trip and invite your group with one link.</p>
           <Link to="/trips/new" className="btn btn-primary">Start planning</Link>
@@ -76,9 +76,9 @@ function TripsList() {
       )}
 
       {!loading && !error && trips.length > 0 && (
-        <section className="trip-grid">
+        <section className="trip-grid stagger-children">
           {trips.map((t) => (
-            <Link key={t.id} to={`/trips/${t.id}`} className="trip-card">
+            <Link key={t.id} to={`/trips/${t.id}`} className="trip-card card-interactive">
               <div className="trip-card-image" style={{ backgroundImage: `url('https://source.unsplash.com/800x500/?${encodeURIComponent(t.destination || 'travel')}')` }} />
               <div className="trip-card-body">
                 <h3>{t.name}</h3>

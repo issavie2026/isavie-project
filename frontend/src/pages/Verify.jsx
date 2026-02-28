@@ -47,7 +47,7 @@ export default function Verify() {
   if (status === 'error') {
     return (
       <div className="container" style={{ maxWidth: 400, marginTop: '3rem' }}>
-        <div className="card">
+        <div className="card card-elevated">
           <h1 style={{ marginTop: 0 }}>Link invalid or expired</h1>
           <p style={{ color: 'var(--text-muted)' }}>{error}</p>
           <a href="/login" className="btn btn-primary">Request a new link</a>

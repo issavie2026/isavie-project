@@ -110,6 +110,7 @@ model ItineraryItem {
   startTime    String?  @map("start_time")  // "TBD" or ISO time
   endTime      String?  @map("end_time")
   locationText String?  @map("location_text")
+  coverImage   String?  @map("cover_image")
   notes        String?
   externalLinks String  @default("[]") @map("external_links") // JSON array
   createdBy    String   @map("created_by")
@@ -144,6 +145,7 @@ model Comment {
   entityId   String    @map("entity_id")
   userId     String    @map("user_id")
   body       String
+  attachments String   @default("[]")
   createdAt  DateTime  @default(now()) @map("created_at")
   deletedAt  DateTime? @map("deleted_at")
 
@@ -193,9 +195,19 @@ model TripEssentials {
   meetingPoints     String   @default("[]") @map("meeting_points")
   houseRules        String?  @map("house_rules")
   emergencyContacts String   @default("[]") @map("emergency_contacts")
+  hotelInfo         String?  @map("hotel_info")
+  flightInfo        String?  @map("flight_info")
+  destinationRules  String?  @map("destination_rules")
   lodgingDetails    String?  @map("lodging_details")
   keyLinks          String   @default("[]") @map("key_links")
   packingList       String   @default("[]") @map("packing_list")
+  travelDetails     String   @default("{}") @map("travel_details")
+  documentsInfo     String   @default("{}") @map("documents_info")
+  safetyHealth      String   @default("{}") @map("safety_health")
+  localInfo         String   @default("{}") @map("local_info")
+  planningInfo      String   @default("{}") @map("planning_info")
+  personalInfo      String   @default("{}") @map("personal_info")
+  groupFeatures     String   @default("{}") @map("group_features")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)

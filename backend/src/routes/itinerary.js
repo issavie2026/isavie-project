@@ -2,14 +2,14 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import { prisma } from '../lib/db.js';
 import { requireAuth } from '../middleware/auth.js';
-import { requireMember, requireOrganizerOrCo } from '../middleware/rbac.js';
+import { requireMember, requireOrganizer } from '../middleware/rbac.js';
 import { badRequest, notFound } from '../middleware/error.js';
 import { notifyTripMembers, notifyUser } from '../lib/notifications.js';
 import { handleValidationErrors } from '../middleware/validate.js';
 
 const router = Router({ mergeParams: true });
 
-const ALLOWED_PATCH_KEYS = ['title', 'startTime', 'endTime', 'locationText', 'notes', 'externalLinks'];
+const ALLOWED_PATCH_KEYS = ['title', 'startTime', 'endTime', 'locationText', 'coverImage', 'notes', 'externalLinks'];
 
 const createItemValidators = [
   body('title').trim().notEmpty().withMessage('title required').bail().isLength({ max: 500 }),
@@ -18,6 +18,7 @@ const createItemValidators = [
   body('start_time').optional({ values: 'null' }).isString().isLength({ max: 50 }),
   body('end_time').optional({ values: 'null' }).isString().isLength({ max: 50 }),
   body('location_text').optional({ values: 'null' }).isString().isLength({ max: 500 }),
+  body('cover_image').optional({ values: 'null' }).isString().isLength({ max: 5000000 }),
   body('notes').optional({ values: 'null' }).isString().isLength({ max: 5000 }),
   body('external_links').optional({ values: 'null' }).isArray(),
   body().custom((_, { req }) => {
@@ -70,10 +71,10 @@ router.get('/', requireAuth, requireMember, async (req, res, next) => {
   }
 });
 
-router.post('/items', requireAuth, requireMember, requireOrganizerOrCo, createItemValidators, handleValidationErrors, async (req, res, next) => {
+router.post('/items', requireAuth, requireMember, requireOrganizer, createItemValidators, handleValidationErrors, async (req, res, next) => {
   try {
     const tripId = getTripId(req);
-    const { day_id, date, title, start_time, end_time, location_text, notes, external_links } = req.body ?? {};
+    const { day_id, date, title, start_time, end_time, location_text, cover_image, notes, external_links } = req.body ?? {};
     const titleStr = (title != null ? String(title).trim() : '') || '';
     let dayId = day_id;
     let dayDate = date;
@@ -103,6 +104,7 @@ router.post('/items', requireAuth, requireMember, requireOrganizerOrCo, createIt
         startTime: start_time != null ? (start_time === '' || start_time === 'TBD' ? null : String(start_time)) : null,
         endTime: end_time != null ? (end_time === '' ? null : String(end_time)) : null,
         locationText: location_text != null ? String(location_text).trim() || null : null,
+        coverImage: cover_image != null ? String(cover_image).trim() || null : null,
         notes: notes != null ? String(notes).trim() || null : null,
         externalLinks: links,
         createdBy: req.userId,
@@ -116,14 +118,14 @@ router.post('/items', requireAuth, requireMember, requireOrganizerOrCo, createIt
   }
 });
 
-router.patch('/items/:itemId', requireAuth, requireMember, requireOrganizerOrCo, async (req, res, next) => {
+router.patch('/items/:itemId', requireAuth, requireMember, requireOrganizer, async (req, res, next) => {
   try {
     const tripId = getTripId(req);
     const { itemId } = req.params;
     const item = await prisma.itineraryItem.findFirst({ where: { id: itemId, tripId } });
     if (!item) throw notFound('Item not found');
     const {
-      day_id, title, start_time, end_time, location_text, notes, external_links,
+      day_id, title, start_time, end_time, location_text, cover_image, notes, external_links,
     } = req.body ?? {};
     const data = {};
     if (day_id !== undefined) data.dayId = day_id;
@@ -131,6 +133,7 @@ router.patch('/items/:itemId', requireAuth, requireMember, requireOrganizerOrCo,
     if (start_time !== undefined) data.startTime = start_time === '' || start_time === 'TBD' ? null : start_time;
     if (end_time !== undefined) data.endTime = end_time === '' ? null : end_time;
     if (location_text !== undefined) data.locationText = String(location_text).trim() || null;
+    if (cover_image !== undefined) data.coverImage = String(cover_image).trim() || null;
     if (notes !== undefined) data.notes = String(notes).trim() || null;
     if (external_links !== undefined) data.externalLinks = Array.isArray(external_links) ? JSON.stringify(external_links) : String(external_links);
     data.updatedBy = req.userId;
@@ -145,7 +148,7 @@ router.patch('/items/:itemId', requireAuth, requireMember, requireOrganizerOrCo,
   }
 });
 
-router.delete('/items/:itemId', requireAuth, requireMember, requireOrganizerOrCo, async (req, res, next) => {
+router.delete('/items/:itemId', requireAuth, requireMember, requireOrganizer, async (req, res, next) => {
   try {
     const tripId = getTripId(req);
     const { itemId } = req.params;

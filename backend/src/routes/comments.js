@@ -13,7 +13,17 @@ const ENTITY_TYPES = ['itinerary_item', 'announcement'];
 const createCommentValidators = [
   body('entity_type').isIn(ENTITY_TYPES).withMessage('entity_type must be itinerary_item or announcement'),
   body('entity_id').notEmpty().withMessage('entity_id required').bail().isString().isLength({ max: 100 }),
-  body('body').trim().notEmpty().withMessage('body required').bail().isLength({ max: 10000 }),
+  body('body')
+    .custom((value, { req }) => {
+      const hasBody = String(value || '').trim().length > 0;
+      const hasAttachments = Array.isArray(req.body?.attachments) && req.body.attachments.length > 0;
+      if (!hasBody && !hasAttachments) throw new Error('body required');
+      return true;
+    })
+    .bail()
+    .custom((value) => String(value || '').trim().length <= 10000)
+    .withMessage('body too long'),
+  body('attachments').optional({ values: 'null' }).isArray().withMessage('attachments must be an array'),
 ];
 
 router.get('/', requireAuth, requireMember, async (req, res, next) => {
@@ -35,7 +45,7 @@ router.get('/', requireAuth, requireMember, async (req, res, next) => {
 
 router.post('/', requireAuth, requireMember, createCommentValidators, handleValidationErrors, async (req, res, next) => {
   try {
-    const { entity_type, entity_id, body: bodyText } = req.body;
+    const { entity_type, entity_id, body: bodyText, attachments } = req.body;
     const comment = await prisma.comment.create({
       data: {
         tripId: req.params.tripId,
@@ -43,6 +53,11 @@ router.post('/', requireAuth, requireMember, createCommentValidators, handleVali
         entityId: String(entity_id),
         userId: req.userId,
         body: String(bodyText).trim(),
+        attachments: JSON.stringify(
+          Array.isArray(attachments)
+            ? attachments.map((value) => String(value).trim()).filter(Boolean)
+            : []
+        ),
       },
       include: { user: { select: { id: true, email: true, name: true } } },
     });

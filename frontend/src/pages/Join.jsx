@@ -54,7 +54,7 @@ export default function Join() {
   if (error && !preview) {
     return (
       <div className="auth-shell">
-        <div className="auth-card card">
+        <div className="auth-card card card-elevated">
           <h2 style={{ marginTop: 0 }}>Invalid invite</h2>
           <p className="muted">{error}</p>
         </div>
@@ -69,7 +69,7 @@ export default function Join() {
 
   return (
     <div className="auth-shell">
-      <div className="auth-card card">
+      <div className="auth-card card card-elevated">
         <p className="eyebrow">Invite</p>
         <h1 style={{ marginTop: 0 }}>Join trip</h1>
         {trip && (

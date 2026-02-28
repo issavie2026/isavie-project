@@ -10,6 +10,15 @@ import { handleValidationErrors } from '../middleware/validate.js';
 
 export const tripsRouter = Router();
 
+function getFrontendBaseUrl() {
+  const raw = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const first = raw
+    .split(',')
+    .map((value) => value.trim())
+    .find(Boolean);
+  return first || 'http://localhost:5173';
+}
+
 const createTripValidators = [
   body('name').trim().notEmpty().withMessage('name required').bail().isLength({ max: 500 }),
   body('destination').trim().notEmpty().withMessage('destination required').bail().isLength({ max: 1000 }),
@@ -118,7 +127,7 @@ tripsRouter.post('/:tripId/invites', requireAuth, requireMember, requireOrganize
     await prisma.invite.create({
       data: { tripId, tokenHash, expiresAt, createdBy: req.userId },
     });
-    const base = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const base = getFrontendBaseUrl();
     const url = `${base}/join/${plainToken}`;
     res.json({ url, token: plainToken, expiresIn: '30d' });
   } catch (e) {
